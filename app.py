@@ -1,6 +1,5 @@
 import streamlit as st
 import google.generativeai as genai
-import os
 
 # Configure page
 st.set_page_config(
@@ -12,6 +11,10 @@ st.set_page_config(
 st.title("🤖 Gemini Chatbot")
 st.write("Simple chatbot to test your Google AI Studio API key")
 
+# Initialize session state
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
 # API Key input
 api_key = st.text_input("Enter your Google AI Studio API Key:", type="password")
 
@@ -19,88 +22,81 @@ if api_key:
     # Configure the API
     genai.configure(api_key=api_key)
     
-    # Initialize the model
+    # Test the API key
     try:
-        model = genai.GenerativeModel('gemini-pro')
-        st.success("✅ API key configured successfully!")
+        # Try to list models
+        models = list(genai.list_models())
         
-        # Initialize chat history
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
-        
-                # Display chat history
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
-        
-        # Chat input
-        if prompt := st.chat_input("Type your message here..."):
-            # Add user message to chat history
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                st.markdown(prompt)
+        if models:
+            st.success("✅ API key is working!")
             
-            # Generate response
-            with st.chat_message("assistant"):
-                try:
-                    with st.spinner("Thinking..."):
-                        response = model.generate_content(prompt)
-                        response_text = response.text
-                    
-                    st.markdown(response_text)
-                    
-                    # Add assistant response to chat history
-                    st.session_state.messages.append({"role": "assistant", "content": response_text})
-                    
-                except Exception as e:
-                    st.error(f"Error generating response: {str(e)}")
+            # Find a working model
+            model_name = "gemini-1.5-flash"  # Default fallback
+            for model in models:
+                if "generateContent" in model.supported_generation_methods:
+                    model_name = model.name
+                    break
+            
+            st.info(f"Using model: {model_name}")
+            
+            # Initialize the model
+            model = genai.GenerativeModel(model_name)
+            
+            # Chat interface
+            st.subheader("Chat")
+            
+            # Display chat history
+            for message in st.session_state.messages:
+                with st.chat_message(message["role"]):
+                    st.write(message["content"])
+            
+            # Chat input
+            user_input = st.chat_input("Type your message...")
+            
+            if user_input:
+                # Add user message
+                st.session_state.messages.append({"role": "user", "content": user_input})
+                
+                # Display user message
+                with st.chat_message("user"):
+                    st.write(user_input)
+                
+                # Generate and display response
+                with st.chat_message("assistant"):
+                    try:
+                        with st.spinner("Thinking..."):
+                            response = model.generate_content(user_input)
+                            bot_response = response.text
+                        
+                        st.write(bot_response)
+                        
+                        # Add to chat history
+                        st.session_state.messages.append({"role": "assistant", "content": bot_response})
+                        
+                    except Exception as e:
+                        error_msg = f"Error: {str(e)}"
+                        st.error(error_msg)
+                        st.session_state.messages.append({"role": "assistant", "content": error_msg})
+            
+            # Clear chat button
+            if st.button("🗑️ Clear Chat"):
+                st.session_state.messages = []
+                st.experimental_rerun()
         
-        # Clear chat button
-        if st.button("Clear Chat"):
-            st.session_state.messages = []
-            st.rerun()
+        else:
+            st.error("❌ No models available")
             
     except Exception as e:
-        st.error(f"❌ Error testing API key: {str(e)}")
-        
-        # Provide specific guidance based on error type
-        if "403" in str(e):
-            st.write("**403 Error usually means:**")
-            st.write("- API key is invalid or expired")
-            st.write("- API key doesn't have proper permissions")
-            st.write("- Billing is not enabled for your project")
-        elif "404" in str(e):
-            st.write("**404 Error usually means:**")
-            st.write("- API endpoint not found")
-            st.write("- Model name is incorrect")
-            st.write("- API key might be for a different service")
-        else:
-            st.write("**Common issues:**")
-            st.write("- Check if your API key is correct")
-            st.write("- Ensure billing is enabled in Google Cloud Console")
-            st.write("- Verify the API key has Generative AI permissions")
-        
-        st.write("**To troubleshoot:**")
-        st.write("1. Go to https://makersuite.google.com/app/apikey")
-        st.write("2. Generate a new API key")
-        st.write("3. Make sure you're using the correct service (AI Studio, not Cloud AI)")
-        st.stop()
+        st.error(f"❌ API Error: {str(e)}")
+        st.write("Please check your API key.")
 
 else:
-    st.info("👆 Please enter your Google AI Studio API key to start chatting")
-    st.write("You can get your API key from: https://makersuite.google.com/app/apikey")
+    st.info("👆 Please enter your API key to start")
+    st.write("Get your key: https://makersuite.google.com/app/apikey")
 
-# Instructions
-with st.expander("How to use"):
-    st.write("""
-    1. Get your API key from Google AI Studio: https://makersuite.google.com/app/apikey
-    2. Enter the API key in the input field above
-    3. Start chatting with Gemini!
-    4. Use the 'Clear Chat' button to reset the conversation
-    """)
-
-# Installation requirements
-with st.expander("Installation Requirements"):
-    st.code("""
-pip install streamlit google-generativeai
-    """)
+# Simple instructions
+st.write("---")
+st.write("**Instructions:**")
+st.write("1. Get API key from Google AI Studio")
+st.write("2. Enter it above")
+st.write("3. Start chatting!")
