@@ -12,70 +12,85 @@ import base64
 import plotly.express as px
 import plotly.graph_objects as go
 
-# Custom CSS styling
+# Enhanced CSS styling for professional appearance
 def inject_custom_css():
     st.markdown("""
     <style>
         /* Main styling */
         .stApp {
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            color: #333;
         }
         
         /* Sidebar styling */
         .css-1d391kg {
-            background-color: rgba(255, 255, 255, 0.9) !important;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.95), rgba(200,200,200,0.95));
             backdrop-filter: blur(10px);
-            border-right: 1px solid #e6e6e6;
+            border-right: 1px solid rgba(0,0,0,0.1);
         }
         
         /* Chat containers */
         .stChatMessage {
-            border-radius: 15px !important;
-            padding: 12px 15px !important;
-            margin: 5px 0 !important;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05) !important;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
         }
         
         /* User message */
         [data-testid="stChatMessage"]:has(div:first-child > .stMarkdown:contains('You')) {
-            background-color: #e3f2fd !important;
+            background: linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%);
         }
         
         /* AI message */
         [data-testid="stChatMessage"]:has(div:first-child > .stMarkdown:contains('AI Assistant')) {
-            background-color: #ffffff !important;
+            background: linear-gradient(90deg, #ffffff 0%, #f5f5f5 100%);
         }
         
         /* Button styling */
         .stButton>button {
-            border-radius: 20px !important;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%) !important;
-            color: white !important;
-            border: none !important;
-            padding: 8px 20px !important;
+            border-radius: 25px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .stButton>button:hover {
+            background: linear-gradient(90deg, #764ba2 0%, #667eea 100%);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
         
         /* Input fields */
         .stTextInput>div>div>input, .stTextArea>div>div>textarea {
-            border-radius: 15px !important;
-            padding: 10px 15px !important;
-            border: 1px solid #ddd !important;
+            border-radius: 15px;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         
         /* Tab styling */
         .stTabs [data-baseweb="tab-list"] {
             gap: 10px;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 15px 15px 0 0;
         }
         
         .stTabs [data-baseweb="tab"] {
-            border-radius: 10px 10px 0 0 !important;
-            padding: 8px 20px !important;
-            background-color: #f0f0f0 !important;
+            border-radius: 10px;
+            padding: 10px 20px;
+            background-color: #f0f0f0;
+            transition: all 0.3s ease;
         }
         
         .stTabs [aria-selected="true"] {
-            background-color: #667eea !important;
-            color: white !important;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
         }
         
         /* Custom cards */
@@ -85,6 +100,11 @@ def inject_custom_css():
             background-color: white;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .custom-card:hover {
+            transform: translateY(-5px);
         }
         
         /* Animation */
@@ -93,8 +113,22 @@ def inject_custom_css():
             to { opacity: 1; transform: translateY(0); }
         }
         
-        .stChatMessage {
+        .stChatMessage, .custom-card {
             animation: fadeIn 0.3s ease-out;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .stApp {
+                padding: 10px;
+            }
+            .stTabs [data-baseweb="tab-list"] {
+                flex-direction: column;
+            }
+            .stTabs [data-baseweb="tab"] {
+                width: 100%;
+                margin-bottom: 5px;
+            }
         }
     </style>
     """, unsafe_allow_html=True)
@@ -125,12 +159,27 @@ def chat_tab():
     st.header("💬 AI Chat Assistant")
     
     if not st.session_state.get("openai_api_key"):
-        openai_api_key = st.text_input("Enter your OpenAI API key:", type="password")
-        if openai_api_key:
-            st.session_state.openai_api_key = openai_api_key
-            openai.api_key = openai_api_key
-            st.success("API key saved!")
-        return
+        with st.container():
+            st.markdown('<div class="custom-card">', unsafe_allow_html=True)
+            openai_api_key = st.text_input("Enter your OpenAI API key:", type="password")
+            if openai_api_key:
+                st.session_state.openai_api_key = openai_api_key
+                openai.api_key = openai_api_key
+                st.success("API key saved!")
+            st.markdown('</div>', unsafe_allow_html=True)
+            return
+    
+    # Chat history management
+    with st.expander("Chat History Options", expanded=False):
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Clear Chat History"):
+                st.session_state.chat_history = []
+                st.success("Chat history cleared!")
+        with col2:
+            max_messages = st.slider("Max messages to keep:", 10, 100, 50, 10)
+            if len(st.session_state.chat_history) > max_messages:
+                st.session_state.chat_history = st.session_state.chat_history[-max_messages:]
     
     # Display chat history
     for message in st.session_state.chat_history:
@@ -139,11 +188,10 @@ def chat_tab():
     
     # User input
     if prompt := st.chat_input("Type your message here..."):
-        # Add user message to chat history
         st.session_state.chat_history.append({"role": "user", "content": prompt})
         
         with st.chat_message("user"):
-            st.markdown(prompt)
+            st.markdown(f"You: {prompt}")
         
         # Generate AI response
         with st.chat_message("assistant"):
@@ -151,16 +199,22 @@ def chat_tab():
             full_response = ""
             
             try:
-                for response in openai.ChatCompletion.create(
-                    model="gpt-4",
-                    messages=[{"role": m["role"], "content": m["content"]} 
-                              for m in st.session_state.chat_history],
-                    stream=True,
-                ):
-                    full_response += response.choices[0].delta.get("content", "")
-                    message_placeholder.markdown(full_response + "▌")
+                client = openai.OpenAI(api_key=st.session_state.openai_api_key)
+                response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {"role": "system", "content": "You are Grok, created by xAI. Provide helpful and truthful answers."},
+                        *[{"role": m["role"], "content": m["content"]} for m in st.session_state.chat_history]
+                    ],
+                    stream=True
+                )
                 
-                message_placeholder.markdown(full_response)
+                for chunk in response:
+                    if chunk.choices[0].delta.content:
+                        full_response += chunk.choices[0].delta.content
+                        message_placeholder.markdown(f"AI Assistant: {full_response} ▌")
+                
+                message_placeholder.markdown(f"AI Assistant: {full_response}")
                 st.session_state.chat_history.append({"role": "assistant", "content": full_response})
             
             except Exception as e:
@@ -171,56 +225,72 @@ def image_generation_tab():
     st.header("🖼️ AI Image Generation")
     
     if not st.session_state.get("together_api_key"):
-        together_api_key = st.text_input("Enter your Together.ai API key:", type="password", key="together_key")
-        if together_api_key:
-            st.session_state.together_api_key = together_api_key
-            st.success("API key saved!")
-        return
+        with st.container():
+            st.markdown('<div class="custom-card">', unsafe_allow_html=True)
+            together_api_key = st.text_input("Enter your Together.ai API key:", type="password", key="together_key")
+            if together_api_key:
+                st.session_state.together_api_key = together_api_key
+                st.success("API key saved!")
+            st.markdown('</div>', unsafe_allow_html=True)
+            return
     
     st.markdown("""
     <div class="custom-card">
-        <h3>Generate images from text prompts</h3>
-        <p>Enter a detailed description of the image you want to generate. The more specific you are, the better the results!</p>
+        <h3>Generate Images from Text Prompts</h3>
+        <p>Enter a detailed description of the image you want to generate. Use the advanced settings for more control.</p>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Image generation settings
+    with st.expander("Advanced Settings", expanded=False):
+        col1, col2 = st.columns(2)
+        with col1:
+            image_size = st.selectbox("Image Size", ["512x512", "1024x1024", "768x768"], index=1)
+        with col2:
+            steps = st.slider("Generation Steps", 10, 50, 30, 5)
     
     col1, col2 = st.columns([3, 1])
     with col1:
         st.session_state.image_prompt = st.text_area(
-            "Image prompt:", 
+            "Image Prompt:", 
             value=st.session_state.image_prompt,
-            placeholder="A futuristic cityscape at night with flying cars and neon lights..."
+            placeholder="A futuristic cityscape at night with flying cars and neon lights...",
+            height=100
         )
     
     with col2:
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("Generate Image"):
             if st.session_state.image_prompt:
-                with st.spinner("Generating image... (this may take a few moments)"):
+                with st.spinner("Generating image..."):
                     try:
                         headers = {
                             "Authorization": f"Bearer {st.session_state.together_api_key}",
                             "Content-Type": "application/json"
                         }
                         
+                        width, height = map(int, image_size.split('x'))
                         payload = {
+                            "model": "stabilityai/stable-diffusion-xl-base-1.0",
                             "prompt": st.session_state.image_prompt,
-                            "model": "stability-ai/sdxl",
-                            "steps": 30,
-                            "width": 1024,
-                            "height": 1024
+                            "width": width,
+                            "height": height,
+                            "steps": steps,
+                            "n": 1
                         }
                         
                         response = requests.post(
-                            "https://api.together.xyz/v1/images/generate",
+                            "https://api.together.xyz/v1/images/generations",
                             headers=headers,
-                            data=json.dumps(payload))
+                            json=payload
+                        )
                         
                         if response.status_code == 200:
                             image_data = response.json()
-                            if "output" in image_data and image_data["output"]:
-                                image_url = image_data["output"][0]
-                                st.session_state.generated_image = image_url
+                            if "data" in image_data and image_data["data"]:
+                                image_b64 = image_data["data"][0]["b64_json"]
+                                image_bytes = base64.b64decode(image_b64)
+                                st.session_state.generated_image = image_bytes
                                 st.success("Image generated successfully!")
                             else:
                                 st.error("Image generation failed. Please try again.")
@@ -233,10 +303,30 @@ def image_generation_tab():
                 st.warning("Please enter an image prompt")
     
     if st.session_state.generated_image:
-        st.image(st.session_state.generated_image)
+        st.image(st.session_state.generated_image, caption="Generated Image")
+        
+        # Image editing options
+        with st.expander("Edit Image", expanded=False):
+            col1, col2 = st.columns(2)
+            with col1:
+                brightness = st.slider("Brightness", -100, 100, 0)
+            with col2:
+                contrast = st.slider("Contrast", -100, 100, 0)
+            
+            if st.button("Apply Edits"):
+                img = Image.open(io.BytesIO(st.session_state.generated_image))
+                enhancer = ImageEnhance.Brightness(img)
+                img = enhancer.enhance(1 + brightness / 100)
+                enhancer = ImageEnhance.Contrast(img)
+                img = enhancer.enhance(1 + contrast / 100)
+                img_byte_arr = io.BytesIO()
+                img.save(img_byte_arr, format='PNG')
+                st.session_state.generated_image = img_byte_arr.getvalue()
+                st.image(st.session_state.generated_image, caption="Edited Image")
+        
         st.download_button(
             label="Download Image",
-            data=requests.get(st.session_state.generated_image).content,
+            data=st.session_state.generated_image,
             file_name="generated_image.png",
             mime="image/png"
         )
@@ -246,23 +336,26 @@ def video_search_tab():
     st.header("📹 Video Search")
     
     if not st.session_state.get("pixels_api_key"):
-        pixels_api_key = st.text_input("Enter your Pexels API key:", type="password", key="pixels_key")
-        if pixels_api_key:
-            st.session_state.pixels_api_key = pixels_api_key
-            st.success("API key saved!")
-        return
+        with st.container():
+            st.markdown('<div class="custom-card">', unsafe_allow_html=True)
+            pixels_api_key = st.text_input("Enter your Pexels API key:", type="password", key="pixels_key")
+            if pixels_api_key:
+                st.session_state.pixels_api_key = pixels_api_key
+                st.success("API key saved!")
+            st.markdown('</div>', unsafe_allow_html=True)
+            return
     
     st.markdown("""
     <div class="custom-card">
-        <h3>Search for high-quality stock videos</h3>
-        <p>Find professional videos for your projects from Pexels' extensive library.</p>
+        <h3>Search High-Quality Stock Videos</h3>
+        <p>Find professional videos from Pexels' extensive library.</p>
     </div>
     """, unsafe_allow_html=True)
     
     col1, col2 = st.columns([3, 1])
     with col1:
         st.session_state.pixels_query = st.text_input(
-            "Search videos:", 
+            "Search Videos:", 
             value=st.session_state.pixels_query,
             placeholder="nature, business, technology..."
         )
@@ -299,7 +392,6 @@ def video_search_tab():
         
         for idx, video in enumerate(st.session_state.pixels_results[:6]):
             with cols[idx % 2]:
-                # Find the HD quality video if available
                 hd_video = next((v for v in video['video_files'] if v['quality'] == 'hd'), video['video_files'][0])
                 st.video(hd_video["link"])
                 st.caption(f"Duration: {video['duration']}s | By: {video['user']['name']}")
@@ -316,19 +408,21 @@ def finance_tab():
     st.header("📈 Finance Dashboard")
     
     if not st.session_state.get("finhub_api_key") or not st.session_state.get("twelve_api_key"):
-        col1, col2 = st.columns(2)
-        with col1:
-            finhub_api_key = st.text_input("Enter your Finnhub API key:", type="password", key="finhub_key")
-            if finhub_api_key:
-                st.session_state.finhub_api_key = finhub_api_key
-        with col2:
-            twelve_api_key = st.text_input("Enter your Twelve Data API key:", type="password", key="twelve_key")
-            if twelve_api_key:
-                st.session_state.twelve_api_key = twelve_api_key
-        
-        if st.session_state.get("finhub_api_key") and st.session_state.get("twelve_api_key"):
-            st.success("API keys saved!")
-        else:
+        with st.container():
+            st.markdown('<div class="custom-card">', unsafe_allow_html=True)
+            col1, col2 = st.columns(2)
+            with col1:
+                finhub_api_key = st.text_input("Enter your Finnhub API key:", type="password", key="finhub_key")
+                if finhub_api_key:
+                    st.session_state.finhub_api_key = finhub_api_key
+            with col2:
+                twelve_api_key = st.text_input("Enter your Twelve Data API key:", type="password", key="twelve_key")
+                if twelve_api_key:
+                    st.session_state.twelve_api_key = twelve_api_key
+            
+            if st.session_state.get("finhub_api_key") and st.session_state.get("twelve_api_key"):
+                st.success("API keys saved!")
+            st.markdown('</div>', unsafe_allow_html=True)
             return
     
     tab1, tab2 = st.tabs(["Stocks", "Crypto"])
@@ -350,21 +444,18 @@ def finance_tab():
                 if st.session_state.stock_symbol:
                     with st.spinner("Fetching stock data..."):
                         try:
-                            # Get basic stock info
                             response = requests.get(
                                 f"https://finnhub.io/api/v1/stock/profile2?symbol={st.session_state.stock_symbol}&token={st.session_state.finhub_api_key}")
                             
                             if response.status_code == 200:
                                 stock_info = response.json()
                                 
-                                # Get stock quote
                                 quote_response = requests.get(
                                     f"https://finnhub.io/api/v1/quote?symbol={st.session_state.stock_symbol}&token={st.session_state.finhub_api_key}")
                                 
                                 if quote_response.status_code == 200:
                                     quote_data = quote_response.json()
                                     
-                                    # Display stock info
                                     st.markdown(f"""
                                     <div class="custom-card">
                                         <h3>{stock_info.get('name', 'N/A')} ({st.session_state.stock_symbol})</h3>
@@ -379,7 +470,6 @@ def finance_tab():
                                     </div>
                                     """, unsafe_allow_html=True)
                                     
-                                    # Get historical data for chart
                                     end_date = datetime.datetime.now()
                                     start_date = end_date - datetime.timedelta(days=365)
                                     
@@ -395,6 +485,12 @@ def finance_tab():
                                             
                                             fig = px.line(df, x='datetime', y='close', 
                                                          title=f"{st.session_state.stock_symbol} Price (1 Year)")
+                                            fig.update_layout(
+                                                template="plotly_white",
+                                                xaxis_title="Date",
+                                                yaxis_title="Price (USD)",
+                                                hovermode="x unified"
+                                            )
                                             st.plotly_chart(fig, use_container_width=True)
                                         else:
                                             st.warning("No historical data available")
@@ -413,6 +509,16 @@ def finance_tab():
     with tab2:
         st.subheader("Cryptocurrency Data")
         
+        if not st.session_state.get("coinapi_api_key"):
+            with st.container():
+                st.markdown('<div class="custom-card">', unsafe_allow_html=True)
+                coinapi_api_key = st.text_input("Enter your CoinAPI key:", type="password", key="coinapi_key")
+                if coinapi_api_key:
+                    st.session_state.coinapi_api_key = coinapi_api_key
+                    st.success("API key saved!")
+                st.markdown('</div>', unsafe_allow_html=True)
+                return
+        
         col1, col2 = st.columns([2, 1])
         with col1:
             st.session_state.crypto_symbol = st.text_input(
@@ -427,18 +533,10 @@ def finance_tab():
                 if st.session_state.crypto_symbol:
                     with st.spinner("Fetching crypto data..."):
                         try:
-                            if not st.session_state.get("coinapi_api_key"):
-                                coinapi_api_key = st.text_input("Enter your CoinAPI key:", type="password", key="coinapi_key")
-                                if coinapi_api_key:
-                                    st.session_state.coinapi_api_key = coinapi_api_key
-                                    st.rerun()
-                                return
-                            
                             headers = {
                                 "X-CoinAPI-Key": st.session_state.coinapi_api_key
                             }
                             
-                            # Get current price
                             response = requests.get(
                                 f"https://rest.coinapi.io/v1/exchangerate/{st.session_state.crypto_symbol}/USD",
                                 headers=headers)
@@ -446,22 +544,21 @@ def finance_tab():
                             if response.status_code == 200:
                                 crypto_data = response.json()
                                 
-                                # Get historical data
                                 end_time = datetime.datetime.now()
                                 start_time = end_time - datetime.timedelta(days=30)
                                 
                                 hist_response = requests.get(
-                                    f"https://rest.coinapi.io/v1/ohlcv/{st.session_state.crypto_symbol}/USD/history?period_id=1DAY&time_start={start_time.strftime('%Y-%m-%dT%H:%M:%S')}&time_end={end_time.strftime('%Y-%m-%dT%H:%M:%S')}",
+                                    f"https://rest.coinapi.io/v1/ohlcv/{st.session_state.crypto_symbol}/USD/history?period_id=1DAY&time_start={start_time.strftime('%Y-%m-%dT%H:%M:%S')}&time_end={end_time.strftime('%Y-%m-%dT%H:%M:%S')}&limit=30",
                                     headers=headers)
                                 
                                 if hist_response.status_code == 200:
                                     hist_data = hist_response.json()
                                     
-                                    # Display crypto info
                                     st.markdown(f"""
                                     <div class="custom-card">
                                         <h3>{st.session_state.crypto_symbol}/USD</h3>
                                         <p><strong>Current Price:</strong> ${crypto_data.get('rate', 'N/A'):,.2f}</p>
+                                        <p><strong>Time:</strong> {crypto_data.get('time', 'N/A')}</p>
                                     </div>
                                     """, unsafe_allow_html=True)
                                     
@@ -472,6 +569,12 @@ def finance_tab():
                                         
                                         fig = px.line(df, x='time_period_start', y='price_close', 
                                                      title=f"{st.session_state.crypto_symbol} Price (30 Days)")
+                                        fig.update_layout(
+                                            template="plotly_white",
+                                            xaxis_title="Date",
+                                            yaxis_title="Price (USD)",
+                                            hovermode="x unified"
+                                        )
                                         st.plotly_chart(fig, use_container_width=True)
                                     else:
                                         st.warning("No historical data available")
@@ -490,15 +593,18 @@ def news_tab():
     st.header("📰 News Explorer")
     
     if not st.session_state.get("news_api_key"):
-        news_api_key = st.text_input("Enter your NewsAPI key:", type="password", key="news_key")
-        if news_api_key:
-            st.session_state.news_api_key = news_api_key
-            st.success("API key saved!")
-        return
+        with st.container():
+            st.markdown('<div class="custom-card">', unsafe_allow_html=True)
+            news_api_key = st.text_input("Enter your NewsAPI key:", type="password", key="news_key")
+            if news_api_key:
+                st.session_state.news_api_key = news_api_key
+                st.success("API key saved!")
+            st.markdown('</div>', unsafe_allow_html=True)
+            return
     
     st.markdown("""
     <div class="custom-card">
-        <h3>Stay updated with the latest news</h3>
+        <h3>Stay Updated with Latest News</h3>
         <p>Search for news articles from thousands of sources worldwide.</p>
     </div>
     """, unsafe_allow_html=True)
@@ -506,7 +612,7 @@ def news_tab():
     col1, col2 = st.columns([3, 1])
     with col1:
         st.session_state.news_query = st.text_input(
-            "Search news:", 
+            "Search News:", 
             value=st.session_state.news_query,
             placeholder="technology, business, sports..."
         )
@@ -546,13 +652,14 @@ def news_tab():
 
 # Main App
 def main():
+    st.set_page_config(page_title="Multi-Purpose AI Assistant", page_icon="🤖", layout="wide")
     inject_custom_css()
     init_session_state()
     
     st.title("🤖 Multi-Purpose AI Assistant")
     st.markdown("""
     <div class="custom-card">
-        <p>Your all-in-one AI assistant with chat, image generation, video search, stock market data, and news capabilities.</p>
+        <p>Your all-in-one AI assistant with advanced chat, image generation, video search, finance dashboard, and news explorer capabilities.</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -561,7 +668,6 @@ def main():
         st.image("https://via.placeholder.com/150x50.png?text=AI+Assistant", width=150)
         st.title("Settings")
         
-        # API Key Management
         with st.expander("🔑 API Key Management", expanded=False):
             st.markdown("""
             <p style="font-size: small;">Enter your API keys to enable all features. Keys are stored in your session and never saved on our servers.</p>
@@ -582,7 +688,6 @@ def main():
             if "news_api_key" in st.session_state:
                 st.success("NewsAPI key configured")
         
-        # Clear all button
         if st.button("Clear All API Keys"):
             for key in ["openai_api_key", "together_api_key", "pixels_api_key", 
                        "finhub_api_key", "twelve_api_key", "coinapi_api_key", "news_api_key"]:
@@ -596,25 +701,18 @@ def main():
             <p><strong>Note:</strong> This application requires API keys for various services.</p>
             <p>You'll need to sign up for:</p>
             <ul>
-                <li>OpenAI (Chat)</li>
-                <li>Together.ai (Image Generation)</li>
-                <li>Pexels (Video Search)</li>
-                <li>Finnhub & Twelve Data (Finance)</li>
-                <li>CoinAPI (Crypto)</li>
-                <li>NewsAPI (News)</li>
+                <li><a href="https://platform.openai.com/" target="_blank">OpenAI</a> (Chat)</li>
+                <li><a href="https://www.together.ai/" target="_blank">Together.ai</a> (Image Generation)</li>
+                <li><a href="https://www.pexels.com/api/" target="_blank">Pexels</a> (Video Search)</li>
+                <li><a href="https://finnhub.io/" target="_blank">Finnhub</a> & <a href="https://www.twelvedata.com/" target="_blank">Twelve Data</a> (Finance)</li>
+                <li><a href="https://www.coinapi.io/" target="_blank">CoinAPI</a> (Crypto)</li>
+                <li><a href="https://newsapi.org/" target="_blank">NewsAPI</a> (News)</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
     
     # Main tabs
-    tabs = [
-        "AI Chat",
-        "Image Generation",
-        "Video Search",
-        "Finance Dashboard",
-        "News Explorer"
-    ]
-    
+    tabs = ["AI Chat", "Image Generation", "Video Search", "Finance Dashboard", "News Explorer"]
     selected_tab = option_menu(
         None,
         tabs,
@@ -623,10 +721,10 @@ def main():
         default_index=0,
         orientation="horizontal",
         styles={
-            "container": {"padding": "0!important", "background-color": "#f9f9f9"},
+            "container": {"padding": "0!important", "background-color": "transparent"},
             "icon": {"color": "#667eea", "font-size": "18px"}, 
-            "nav-link": {"font-size": "16px", "text-align": "left", "margin": "0px", "--hover-color": "#eee"},
-            "nav-link-selected": {"background-color": "#667eea"},
+            "nav-link": {"font-size": "16px", "text-align": "center", "margin": "0px", "--hover-color": "#eee"},
+            "nav-link-selected": {"background": "linear-gradient(90deg, #667eea 0%, #764ba2 100%)", "color": "white"},
         }
     )
     
