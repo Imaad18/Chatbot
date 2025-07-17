@@ -3,5 +3,5 @@ streamlit-option-menu==0.3.6
 openai==1.10.0
 requests==2.31.0
 pandas==2.0.3
-pillow==10.0.0
+pillow==10.4.0
 plotly==5.18.0
