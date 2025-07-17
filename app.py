@@ -84,7 +84,7 @@ if api_key:
         st.write("1. Go to https://makersuite.google.com/app/apikey")
         st.write("2. Generate a new API key")
         st.write("3. Make sure you're using the correct service (AI Studio, not Cloud AI)")
-        return
+        st.stop()
 
 else:
     st.info("👆 Please enter your Google AI Studio API key to start chatting")
