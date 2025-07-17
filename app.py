@@ -61,8 +61,30 @@ if api_key:
             st.rerun()
             
     except Exception as e:
-        st.error(f"Error configuring API: {str(e)}")
-        st.write("Please check your API key and try again.")
+        st.error(f"❌ Error testing API key: {str(e)}")
+        
+        # Provide specific guidance based on error type
+        if "403" in str(e):
+            st.write("**403 Error usually means:**")
+            st.write("- API key is invalid or expired")
+            st.write("- API key doesn't have proper permissions")
+            st.write("- Billing is not enabled for your project")
+        elif "404" in str(e):
+            st.write("**404 Error usually means:**")
+            st.write("- API endpoint not found")
+            st.write("- Model name is incorrect")
+            st.write("- API key might be for a different service")
+        else:
+            st.write("**Common issues:**")
+            st.write("- Check if your API key is correct")
+            st.write("- Ensure billing is enabled in Google Cloud Console")
+            st.write("- Verify the API key has Generative AI permissions")
+        
+        st.write("**To troubleshoot:**")
+        st.write("1. Go to https://makersuite.google.com/app/apikey")
+        st.write("2. Generate a new API key")
+        st.write("3. Make sure you're using the correct service (AI Studio, not Cloud AI)")
+        return
 
 else:
     st.info("👆 Please enter your Google AI Studio API key to start chatting")
